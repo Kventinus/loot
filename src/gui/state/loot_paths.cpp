@@ -79,7 +79,7 @@ std::filesystem::path getExecutableDirectory() {
   executablePathString = std::string(result, count);
 #endif
 
-  return std::filesystem::path(executablePathString).parent_path();
+  return std::filesystem::u8path(executablePathString).parent_path();
 }
 
 std::filesystem::path LootPaths::getReadmePath() {
@@ -136,13 +136,13 @@ std::filesystem::path LootPaths::getLocalAppDataPath() {
   const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
 
   if (xdgConfigHome != nullptr)
-    return std::filesystem::path(xdgConfigHome);
+    return std::filesystem::u8path(xdgConfigHome);
 
   // Otherwise, use the HOME env. var. if it's available.
   xdgConfigHome = getenv("HOME");
 
   if (xdgConfigHome != nullptr)
-    return std::filesystem::path(xdgConfigHome) / ".config";
+    return std::filesystem::u8path(xdgConfigHome) / ".config";
 
   // If somehow both are missing, use the executable's directory.
   return getExecutableDirectory();

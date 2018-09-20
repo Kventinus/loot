@@ -159,7 +159,7 @@ TEST_P(GameSettingsTest, setGamePathShouldStoreGivenValue) {
   GameSettings settings_;
 
   settings_.SetGamePath(pathValue);
-  EXPECT_EQ(pathValue, settings_.GamePath().string());
+  EXPECT_EQ(pathValue, settings_.GamePath().u8string());
 }
 }
 }

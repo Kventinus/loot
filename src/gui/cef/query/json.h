@@ -281,8 +281,8 @@ void to_json(nlohmann::json& json, const GameSettings& game) {
     { "folder", game.FolderName() },
     { "repo", game.RepoURL() },
     { "branch", game.RepoBranch() },
-    { "path", game.GamePath().string() },
-    { "localPath", game.GameLocalPath().string() },
+    { "path", game.GamePath().u8string() },
+    { "localPath", game.GameLocalPath().u8string() },
   };
 }
 

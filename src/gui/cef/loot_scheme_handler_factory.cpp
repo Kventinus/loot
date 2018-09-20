@@ -51,7 +51,7 @@ CefRefPtr<CefResourceHandler> LootSchemeHandlerFactory::Create(
   }
   const string filePath = GetPath(request->GetURL());
 
-  if (std::filesystem::exists(filePath)) {
+  if (std::filesystem::exists(std::filesystem::u8path(filePath))) {
     return new CefStreamResourceHandler(
         200,
         "OK",
@@ -74,8 +74,8 @@ std::string LootSchemeHandlerFactory::GetPath(const CefString& url) const {
   CefURLParts urlParts;
   CefParseURL(url, urlParts);
 
-  return (LootPaths::getResourcesPath() / CefString(&urlParts.path).ToString())
-      .string();
+  return (LootPaths::getResourcesPath() / std::filesystem::u8path(CefString(&urlParts.path).ToString()))
+      .u8string();
 }
 
 std::string LootSchemeHandlerFactory::GetMimeType(

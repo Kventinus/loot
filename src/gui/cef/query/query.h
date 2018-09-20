@@ -77,15 +77,15 @@ protected:
 
   void setSortingErrorMessage(LootState& state) {
     auto pluginsTxtPath = LootPaths::getLootDataPath().parent_path() /
-      state.getCurrentGame().FolderName() /
+      std::filesystem::u8path(state.getCurrentGame().FolderName()) /
       "plugins.txt";
 
     errorMessage = (boost::format(boost::locale::translate(
       "Oh no, something went wrong! This is usually because \"%1%\" "
       "is set to be read-only. If it is, unset it and try again. If "
       "it isn't, you can check your LOOTDebugLog.txt (you can get to "
-      "it through the main menu) for more information.")) % 
-      pluginsTxtPath.string()).str();
+      "it through the main menu) for more information.")) %
+      pluginsTxtPath.u8string()).str();
   }
 
 private:

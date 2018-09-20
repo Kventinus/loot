@@ -57,7 +57,7 @@ GameSettings convert(const std::shared_ptr<cpptoml::table>& table) {
 
     auto path = LootPaths::getLootDataPath() / "SkyrimSE";
     if (std::filesystem::exists(path)) {
-      std::filesystem::rename(path, LootPaths::getLootDataPath() / *folder);
+      std::filesystem::rename(path, LootPaths::getLootDataPath() / std::filesystem::u8path(*folder));
     }
   }
 
@@ -255,8 +255,8 @@ void LootSettings::save(const std::filesystem::path& file) {
       game->insert("master", gameSettings.Master());
       game->insert("repo", gameSettings.RepoURL());
       game->insert("branch", gameSettings.RepoBranch());
-      game->insert("path", gameSettings.GamePath().string());
-      game->insert("local_path", gameSettings.GameLocalPath().string());
+      game->insert("path", gameSettings.GamePath().u8string());
+      game->insert("local_path", gameSettings.GameLocalPath().u8string());
       game->insert("registry", gameSettings.RegistryKey());
       games->push_back(game);
     }

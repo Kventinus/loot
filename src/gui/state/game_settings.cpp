@@ -26,8 +26,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-namespace fs = std::filesystem;
-
 namespace loot {
 const std::set<std::string> GameSettings::oldDefaultBranches({
     "master",
@@ -120,9 +118,9 @@ std::string GameSettings::RepoURL() const { return repositoryURL_; }
 
 std::string GameSettings::RepoBranch() const { return repositoryBranch_; }
 
-fs::path GameSettings::GamePath() const { return gamePath_; }
+std::filesystem::path GameSettings::GamePath() const { return gamePath_; }
 
-fs::path GameSettings::GameLocalPath() const {
+std::filesystem::path GameSettings::GameLocalPath() const {
   return gameLocalPath_;
 }
 

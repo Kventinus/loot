@@ -52,6 +52,7 @@
 #include "windows.h"
 #endif
 
+using std::filesystem::u8path;
 using std::list;
 using std::lock_guard;
 using std::mutex;
@@ -124,7 +125,7 @@ void Game::Init() {
 
   if (!lootDataPath_.empty()) {
     // Make sure that the LOOT game path exists.
-    auto lootGamePath = lootDataPath_ / FolderName();
+    auto lootGamePath = lootDataPath_ / u8path(FolderName());
     if (!fs::is_directory(lootGamePath)) {
       if (fs::exists(lootGamePath)) {
         throw FileAccessError("Could not create LOOT folder for game, the path exists but is not a directory");
@@ -164,9 +165,9 @@ std::vector<Message> Game::CheckInstallValidity(
   if (IsPluginActive(plugin->GetName())) {
 
     auto fileExists = [&](const std::string& file) {
-      return std::filesystem::exists(DataPath() / file) ||
+      return std::filesystem::exists(DataPath() / u8path(file)) ||
              (hasPluginFileExtension(file) &&
-              std::filesystem::exists(DataPath() / (file + ".ghost")));
+              std::filesystem::exists(DataPath() / u8path(file + ".ghost")));
     };
     auto tags = metadata.GetTags();
     if (tags.find(Tag("Filter")) == std::end(tags)) {
@@ -290,7 +291,7 @@ void Game::RedatePlugins() {
   if (!loadorder.empty()) {
     std::filesystem::file_time_type lastTime = std::filesystem::file_time_type::clock::time_point::min();
     for (const auto& pluginName : loadorder) {
-      fs::path filepath = DataPath() / pluginName;
+      fs::path filepath = DataPath() / u8path(pluginName);
       if (!fs::exists(filepath)) {
         filepath += ".ghost";
         if (!fs::exists(filepath)) {
@@ -356,12 +357,12 @@ std::filesystem::path Game::DataPath() const {
   return GamePath() / "Data";
 }
 
-fs::path Game::MasterlistPath() const {
-  return lootDataPath_ / FolderName() / "masterlist.yaml";
+std::filesystem::path Game::MasterlistPath() const {
+  return lootDataPath_ / u8path(FolderName()) / "masterlist.yaml";
 }
 
-fs::path Game::UserlistPath() const {
-  return lootDataPath_ / FolderName() / "userlist.yaml";
+std::filesystem::path Game::UserlistPath() const {
+  return lootDataPath_ / u8path(FolderName()) / "userlist.yaml";
 }
 
 std::vector<std::string> Game::GetLoadOrder() const {
@@ -369,7 +370,7 @@ std::vector<std::string> Game::GetLoadOrder() const {
 }
 
 void Game::SetLoadOrder(const std::vector<std::string>& loadOrder) {
-  BackupLoadOrder(GetLoadOrder(), lootDataPath_ / FolderName());
+  BackupLoadOrder(GetLoadOrder(), lootDataPath_ / u8path(FolderName()));
   gameHandle_->SetLoadOrder(loadOrder);
 }
 
@@ -531,9 +532,9 @@ void Game::ClearMessages() {
 
 bool Game::UpdateMasterlist() {
   bool wasUpdated = gameHandle_->GetDatabase()->UpdateMasterlist(
-      MasterlistPath().string(), RepoURL(), RepoBranch());
+      MasterlistPath().u8string(), RepoURL(), RepoBranch());
   if (wasUpdated && !gameHandle_->GetDatabase()->IsLatestMasterlist(
-                        MasterlistPath().string(), RepoBranch())) {
+                        MasterlistPath().u8string(), RepoBranch())) {
     AppendMessage(Message(
         MessageType::error,
         boost::locale::translate("The latest masterlist revision contains a "
@@ -547,7 +548,7 @@ bool Game::UpdateMasterlist() {
 
 MasterlistInfo Game::GetMasterlistInfo() const {
   return gameHandle_->GetDatabase()->GetMasterlistRevision(
-      MasterlistPath().string(), true);
+      MasterlistPath().u8string(), true);
 }
 
 void Game::LoadMetadata() {
@@ -557,14 +558,14 @@ void Game::LoadMetadata() {
     if (logger_) {
       logger_->debug("Preparing to parse masterlist.");
     }
-    masterlistPath = MasterlistPath().string();
+    masterlistPath = MasterlistPath().u8string();
   }
 
   if (std::filesystem::exists(UserlistPath())) {
     if (logger_) {
       logger_->debug("Preparing to parse userlist.");
     }
-    userlistPath = UserlistPath().string();
+    userlistPath = UserlistPath().u8string();
   }
 
   if (logger_) {
@@ -638,7 +639,7 @@ void Game::ClearAllUserMetadata() {
 }
 
 void Game::SaveUserMetadata() {
-  gameHandle_->GetDatabase()->WriteUserMetadata(UserlistPath().string(), true);
+  gameHandle_->GetDatabase()->WriteUserMetadata(UserlistPath().u8string(), true);
 }
 
 bool Game::ExecutableExists(const GameType& gameType,
@@ -660,23 +661,23 @@ std::filesystem::path Game::DetectGamePath(const GameSettings& gameSettings) {
                     gameSettings.Name());
     }
     if (!gameSettings.GamePath().empty() &&
-        fs::exists(gameSettings.GamePath() / "Data" / gameSettings.Master()))
+        fs::exists(gameSettings.GamePath() / "Data" / u8path(gameSettings.Master())))
       return gameSettings.GamePath();
 
     std::filesystem::path gamePath = "..";
-    if (fs::exists(gamePath / "Data" / gameSettings.Master()) &&
+    if (fs::exists(gamePath / "Data" / u8path(gameSettings.Master())) &&
         ExecutableExists(gameSettings.Type(), gamePath)) {
       return gamePath;
     }
 
 #ifdef _WIN32
     std::string key_parent =
-        fs::path(gameSettings.RegistryKey()).parent_path().string();
+        fs::u8path(gameSettings.RegistryKey()).parent_path().u8string();
     std::string key_name =
-        fs::path(gameSettings.RegistryKey()).filename().string();
+        fs::u8path(gameSettings.RegistryKey()).filename().u8string();
     gamePath = RegKeyStringValue("HKEY_LOCAL_MACHINE", key_parent, key_name);
     if (!gamePath.empty() &&
-        fs::exists(gamePath / "Data" / gameSettings.Master()) &&
+        fs::exists(gamePath / "Data" / u8path(gameSettings.Master())) &&
         ExecutableExists(gameSettings.Type(), gamePath)) {
       return gamePath;
     }
@@ -698,19 +699,19 @@ void Game::BackupLoadOrder(const std::vector<std::string>& loadOrder,
   boost::format filenameFormat = boost::format("loadorder.bak.%1%");
 
   std::filesystem::path backupFilePath =
-      backupDirectory / (filenameFormat % 2).str();
+      backupDirectory / u8path((filenameFormat % 2).str());
   if (std::filesystem::exists(backupFilePath))
     std::filesystem::remove(backupFilePath);
 
   for (int i = maxBackupIndex - 1; i > -1; --i) {
     const std::filesystem::path backupFilePath =
-        backupDirectory / (filenameFormat % i).str();
+        backupDirectory / u8path((filenameFormat % i).str());
     if (std::filesystem::exists(backupFilePath))
       std::filesystem::rename(
-          backupFilePath, backupDirectory / (filenameFormat % (i + 1)).str());
+          backupFilePath, backupDirectory / u8path((filenameFormat % (i + 1)).str()));
   }
 
-  std::ofstream out(backupDirectory / (filenameFormat % 0).str());
+  std::ofstream out(backupDirectory / u8path((filenameFormat % 0).str()));
   for (const auto& plugin : loadOrder) out << plugin << std::endl;
 }
 
@@ -801,8 +802,8 @@ std::vector<std::string> Game::GetInstalledPluginNames() {
        it != fs::directory_iterator();
        ++it) {
     if (fs::is_regular_file(it->status()) &&
-        gameHandle_->IsValidPlugin(it->path().filename().string())) {
-      string name = it->path().filename().string();
+        gameHandle_->IsValidPlugin(it->path().filename().u8string())) {
+      string name = it->path().filename().u8string();
 
       if (logger_) {
         logger_->info("Found plugin: {}", name);
